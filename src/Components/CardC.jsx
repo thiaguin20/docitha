@@ -130,8 +130,14 @@ export default function CardC() {
                 bg-gradient-to-br from-[#fce4ef] to-[#dbeeff]
                 opacity-60
               " />
+              
               <img
-                src={item.imagem && item.imagem.startsWith("http") ? item.imagem : (item.imagem || "")}
+                src={
+                  item.imagem?.startsWith("http")
+                  ? item.imagem
+                  : "https://via.placeholder.com/150"
+                }
+
                 alt={item.nome}
                 className="relative max-h-[100px] md:max-h-[135px] object-contain drop-shadow-md
                            group-hover:scale-105 transition-transform duration-300"

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 
 export default function Main() {
   return (
@@ -55,7 +56,7 @@ export default function Main() {
 
              active:scale-95 active:translate-y-1
     ">
-      Faça seu pedido
+      <a href="https://api.whatsapp.com/send?phone=5518997409697">Faça seu pedido</a>
     </button>
 
     <button className="
@@ -70,7 +71,7 @@ export default function Main() {
 
              active:scale-95 active:translate-y-1
     ">
-      Ver cardápio
+       <Link to="/cardapio"> Ver cardápio </Link>
     </button>
 
   </div>

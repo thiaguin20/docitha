@@ -26,7 +26,7 @@ export default function Footer() {
       <div className="flex gap-4 flex-wrap">
 
         <a
-          href=""
+          href="https://api.whatsapp.com/send?phone=5518997409697"
           className="
             border border-white
             px-3 py-1 rounded-md

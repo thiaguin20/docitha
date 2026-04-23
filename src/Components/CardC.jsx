@@ -1,17 +1,5 @@
-import Beijinho from "../assets/Docinhos_Tradicionais/beijinho.png";
-import Brigadeiro from "../assets/Docinhos_Tradicionais/brigadeiro.png";
-import DoisAmores from "../assets/Docinhos_Tradicionais/DoisAmores.png";
-import Prestigio from "../assets/Docinhos_Tradicionais/prestigio.png";
-
-import NinhoN from "../assets/Docinhos_Gourmet/NinhoNutella.png";
-import Ferrero from "../assets/Docinhos_Gourmet/ferrero.png";
-import Churros from "../assets/Docinhos_Gourmet/churros.png";
-import Limao from "../assets/Docinhos_Gourmet/limao.png";
-
-import BombomA from "../assets/Docinhos_Especiais/bombomA.png";
-import taca from "../assets/Docinhos_Especiais/taca.png";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { API_URL } from "../api";
 
 export default function CardC() {
   function formatarValor(valor) {
@@ -21,146 +9,64 @@ export default function CardC() {
     return valor;
   }
 
-  const [categoria, setCategoria] = useState("tradicionais");
+  const [categorias, setCategorias] = useState([]);
+  const [produtos, setProdutos] = useState([]);
+  const [categoria, setCategoria] = useState(null);
 
-  const dados = {
-    tradicionais: {
-      titulo: "Docinhos Tradicionais",
-      produtos: [
-        {
-          id: "brigadeiro",
-          nome: "Brigadeiro",
-          imagem: Brigadeiro,
-          precos: [
-            { label: "Unidade", valor: 2.20 },
-            { label: "50 Un", valor: 104.50 },
-            { label: "100 Un", valor: 198.00 },
-          ],
-        },
-        {
-          id: "beijinho",
-          nome: "Beijinho",
-          imagem: Beijinho,
-          precos: [
-            { label: "Unidade", valor: 2.20 },
-            { label: "50 Un", valor: 104.50 },
-            { label: "100 Un", valor: 198.00 },
-          ],
-        },
-        {
-          id: "dois-amores",
-          nome: "Dois Amores",
-          imagem: DoisAmores,
-          precos: [
-            { label: "Unidade", valor: 2.20 },
-            { label: "50 Un", valor: 104.50 },
-            { label: "100 Un", valor: 198.00 },
-          ],
-        },
-        {
-          id: "prestigio",
-          nome: "Prestígio",
-          imagem: Prestigio,
-          precos: [
-            { label: "Unidade", valor: 2.20 },
-            { label: "50 Un", valor: 104.50 },
-            { label: "100 Un", valor: 198.00 },
-          ],
-        },
-      ],
-    },
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Buscar categorias
+        const catResponse = await fetch(`${API_URL}/categorias`);
+        const catData = await catResponse.json();
+        setCategorias(catData || []);
+        if (catData.length > 0) {
+          setCategoria(catData[0].id);
+        }
 
-    gourmet: {
-      titulo: "Docinhos Gourmet",
-      
-      produtos: [
-        {
-          id: "ninho-nutella",
-          nome: "Ninho com Nutella",
-          imagem: NinhoN,
-          precos: [
-            { label: "Unidade", valor: 2.60 },
-            { label: "50 Un", valor: 123.50 },
-          ],
-        },
-        {
-          id: "ferrero",
-          nome: "Ferrero Rocher",
-          imagem: Ferrero,
-          precos: [
-            { label: "Unidade", valor: 2.60 },
-            { label: "50 Un", valor: 123.50 },
-          ],
-        },
-        {
-          id: "churros",
-          nome: "Churros",
-          imagem: Churros,
-          precos: [
-            { label: "Unidade", valor: 2.60 },
-            { label: "50 Un", valor: 123.50 },
-          ],
-        },
-        {
-          id: "limao",
-          nome: "Limão",
-          imagem: Limao,
-          precos: [
-            { label: "Unidade", valor: 2.60 },
-            { label: "50 Un", valor: 123.50 },
-          ],
-        },
-      ],
-    },
+        // Buscar produtos
+        const prodResponse = await fetch(`${API_URL}/produtos`);
+        const prodData = await prodResponse.json();
+        
+        // Reorganizar produtos por categoria
+        const produtosPorCateg = Object.values(prodData).flatMap((cat) =>
+          (cat?.produtos || []).map((item) => ({
+            ...item,
+            categoriaId: item.categoriaId || item.categoria,
+          }))
+        );
+        setProdutos(produtosPorCateg);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
+    };
 
-    especiais: {
-      titulo: "Especiais",
-      
-      produtos: [
-        {
-          id: "taca-docitha",
-          nome: "Taça Tentação Docitha",
-          imagem: taca,
-          precos: [
-            { label: "Unidade", valor: 20.00 },
-            { label: "Sabores", valor: "Uva e morango" },
-          ],
-        },
-        {
-          id: "bombom-aberto",
-          nome: "Bombom Aberto",
-          imagem: BombomA,
-          precos: [
-            { label: "Unidade", valor: 16.00 },
-            { label: "Sabores", valor: "Uva e morango" },
-          ],
-        },
-      ],
-    },
-  };
+    fetchData();
+  }, []);
 
-  const categoriaAtual = dados[categoria];
+  // Obter nome e produtos da categoria selecionada
+  const categoriaNome = categorias.find((c) => c.id === categoria)?.nome || "Cardápio";
+  const categoriaProdutos = produtos.filter((p) => p.categoriaId === categoria);
 
   return (
     <section className="w-full pb-12">
 
       {/* ── Tabs de categoria  */}
-      <div className="flex justify-center px-4 mt-6">
-        <div className="flex gap-1 bg-[#f8e9f0] p-1.5 rounded-2xl shadow-inner w-full max-w-sm">
-          {Object.entries(dados).map(([key, val]) => (
+      <div className="flex justify-center px-4 mt-6" >
+        <div className="flex flex-wrap gap-2 bg-[#f8e9f0] p-2 rounded-2xl shadow-inner w-full max-w-2xl justify-center">
+          {categorias.map((cat) => (
             <button
-              key={key}
-              onClick={() => setCategoria(key)}
+              key={cat.id}
+              onClick={() => setCategoria(cat.id)}
               className={`
-                flex-1 py-2 px-1 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200
-                ${categoria === key
+                py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold tracking-wide transition-all duration-200 whitespace-nowrap
+                ${categoria === cat.id
                   ? "bg-[#E8719D] text-white shadow-md scale-[1.03]"
                   : "text-[#b05480] hover:bg-[#f3cfe0]"
                 }
               `}
             >
-              <span className="block text-base leading-none mb-0.5">{val.emoji}</span>
-              {key.charAt(0).toUpperCase() + key.slice(1)}
+              {cat.nome}
             </button>
           ))}
         </div>
@@ -176,7 +82,7 @@ export default function CardC() {
         </div>
 
         <h2 className="text-3xl md:text-4xl text-[#d94f87] font-[Alex_Brush] leading-tight">
-          {categoriaAtual.titulo}
+          {categoriaNome}
         </h2>
 
         <div className="flex items-center gap-3 w-full max-w-xs">
@@ -192,7 +98,7 @@ export default function CardC() {
         grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4
         gap-3 md:gap-5
       ">
-        {categoriaAtual.produtos.map((item) => (
+        {categoriaProdutos.map((item) => (
           <div
             key={item.id}
             className="
@@ -225,11 +131,11 @@ export default function CardC() {
                 opacity-60
               " />
               <img
-                src={item.imagem}
+                src={item.imagem && item.imagem.startsWith("http") ? item.imagem : (item.imagem || "")}
                 alt={item.nome}
                 className="relative max-h-[100px] md:max-h-[135px] object-contain drop-shadow-md
                            group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => (e.target.src = Brigadeiro)}
+                onError={(e) => (e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f0d0dd' width='100' height='100'/%3E%3Ctext x='50' y='50' font-size='14' fill='%23c2185b' text-anchor='middle' dy='.3em'%3ESem imagem%3C/text%3E%3C/svg%3E")}
               />
             </div>
 
@@ -263,6 +169,20 @@ export default function CardC() {
                   </div>
                 ))}
               </div>
+
+              {item.infos?.map((info, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between"
+                >
+                  <span className="text-[10px] md:text-xs text-[#9ca3af] font-medium uppercase tracking-wide">
+                    {info.label.toUpperCase()}
+                  </span>
+                  <span className="text-[11px] md:text-sm text-[#c2185b] font-extrabold tracking-wide">
+                    {formatarValor(info.valor)}
+                  </span>
+                </div>
+              ))}
 
               {/* Botão */}
               <a

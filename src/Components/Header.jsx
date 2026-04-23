@@ -1,11 +1,10 @@
 import Logo from "../assets/Logo.png";
 import { Link } from "react-router-dom";
-import LoginModal from "../Components/LoginModal";
-import { useState } from "react";
+
 
 export default function Header() {
 
-  const [abrirLogin, setAbrirLogin] = useState(false);
+  
 
   return (
     <>
@@ -51,9 +50,9 @@ export default function Header() {
               Contato
             </a>
 
-            <button className="rounded-[10px] bg-[#76A5AF] text-[white] py-2 px-2" onClick={() => setAbrirLogin(true)}>
+            <Link to="/login" className="rounded-[10px] bg-[#76A5AF] text-[white] py-2 px-2 transition md:hover:scale-105 md:hover:-translate-y-1 active:scale-95">
               Login
-            </button>
+            </Link>
 
           </div>
 
@@ -61,10 +60,7 @@ export default function Header() {
 
       </header>
 
-      {/* MODAL */}
-      {abrirLogin && (
-        <LoginModal fechar={() => setAbrirLogin(false)} />
-      )}
+      
     </>
   );
 }

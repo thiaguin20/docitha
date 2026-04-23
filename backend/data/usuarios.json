@@ -1,0 +1,18 @@
+{
+  "usuarios": [
+    {
+      "id": "admin",
+      "nome": "Admin",
+      "email": "admin@docitha.com",
+      "senha": "$2b$10$rs7Z5V7rmiH2DzRSsS9Bcek0D56c8y8W2KjUTMCUspXwwOSGnc35q",
+      "role": "admin"
+    },
+    {
+      "id": "1776473101012",
+      "nome": "Thiago",
+      "email": "thiago@gmail.com",
+      "senha": "$2b$10$kO5sGWC/1njY5LWEJmWj1O9Fsu92524q.eTIbbuUG4FdJVLI76OH6",
+      "role": "user"
+    }
+  ]
+}

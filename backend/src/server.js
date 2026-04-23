@@ -58,7 +58,7 @@ app.use(cors({
 }));
 
 
-app.options("*", cors());
+app.options(/.*/, cors());
 /* ================= UTIL ================= */
 
 async function readJson(file) {

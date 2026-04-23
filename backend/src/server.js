@@ -31,17 +31,34 @@ app.use(express.json());
 /* ================= CORS ================= */
 const cors = require("cors");
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://yellow-mud-01f21ff1e.7.azurestaticapps.net"
+];
+
+// só adiciona se existir
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    process.env.FRONTEND_URL,
-    "https://yellow-mud-01f21ff1e.7.azurestaticapps.net"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: function (origin, callback) {
+    // permite requisições sem origin (ex: postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
+
+app.options("*", cors());
 /* ================= UTIL ================= */
 
 async function readJson(file) {

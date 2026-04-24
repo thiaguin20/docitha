@@ -12,7 +12,7 @@ const app = express();
 
 const dataDir = path.join(__dirname, "..", "data");
 const produtosFile = path.join(dataDir, "produtos.json");
-const usuariosFile = path.join(dataDir, "usuarios.json");
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -25,8 +25,7 @@ const supabase = createClient(
 const BUCKET_NAME = process.env.SUPABASE_BUCKET || "docitha";
 const PUBLIC_URL = `${process.env.SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/`;
 
-app.use(express.json());
-/* Removido: app.use("/uploads", express.static(uploadDir)); */
+app.use(express.json({ limit: "1mb" }));
 
 /* ================= CORS ================= */
 const cors = require("cors");
@@ -36,34 +35,57 @@ const allowedOrigins = [
   "https://yellow-mud-01f21ff1e.7.azurestaticapps.net"
 ];
 
-// só adiciona se existir
 if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    // permite requisições sem origin (ex: postman)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error(`CORS bloqueado: ${origin}`));
     }
+
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
+/* ================= Segurança ================= */
+
+const rateLimit = require("express-rate-limit");
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 100, // 100 req por IP
+  message: "Muitas requisições, tente novamente mais tarde"
+});
+
+app.use(limiter);
 
 
-app.options(/.*/, cors());
+const helmet = require("helmet");
+app.use(helmet());
+
+
 /* ================= UTIL ================= */
 
+
+
 async function readJson(file) {
-  const data = await fsPromises.readFile(file, "utf8");
-  return JSON.parse(data || "{}");
+  try {
+    const data = await fsPromises.readFile(file, "utf8");
+    return JSON.parse(data || "{}");
+  } catch {
+    return {};
+  }
 }
 
 let writeLock = Promise.resolve();
@@ -205,44 +227,52 @@ async function init() {
     });
   }
 
-  if (!require("fs").existsSync(usuariosFile)) {
-    await writeJson(usuariosFile, {
-      usuarios: [
-        {
-          id: "admin",
-          nome: "Admin",
-          email: "admin@docitha.com",
-          senha:
-            "$2b$10$rs7Z5V7rmiH2DzRSsS9Bcek0D56c8y8W2KjUTMCUspXwwOSGnc35q",
-          role: "admin",
-        },
-      ],
-    });
-  }
+  
 }
 
 init();
 
 /* ================= LOGIN ================= */
 
-app.post("/login", async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 300,
+  message: "Muitas tentativas de login"
+});
+
+app.post("/login", loginLimiter, async (req, res) => {
   const { email, senha } = req.body;
 
-  const data = await readJson(usuariosFile);
-  const user = data.usuarios.find((u) => u.email === email);
+  if (!email || !senha) {
+  return res.status(400).json({ message: "Dados inválidos" });
+}
 
-  if (!user) return res.status(401).json({ message: "Erro login" });
+  // valida email
+  if (email !== process.env.ADMIN_EMAIL) {
+    return res.status(401).json({ message: "Erro login" });
+  }
 
-  const ok = await bcrypt.compare(senha, user.senha);
-  if (!ok) return res.status(401).json({ message: "Erro login" });
+  // valida senha com hash
+  const ok = await bcrypt.compare(
+    senha,
+    process.env.ADMIN_PASSWORD_HASH
+  );
 
+  if (!ok) {
+    return res.status(401).json({ message: "Erro login" });
+  }
+
+  // gera token
   const token = jwt.sign(
-    { id: user.id, role: user.role },
+    { role: "admin" },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
 
-  res.json({ token, user: { nome: user.nome } });
+  res.json({
+    token,
+    user: { nome: "Admin" }
+  });
 });
 
 /* ================= UPLOAD ================= */

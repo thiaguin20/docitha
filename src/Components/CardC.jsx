@@ -12,40 +12,40 @@ export default function CardC() {
   const [categorias, setCategorias] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [categoria, setCategoria] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  // 🔄 função reutilizável
+  const fetchData = async () => {
+    try {
+      setLoading(true);
 
-        const catResponse = await fetch(`${API_URL}/categorias`);
-        const catData = await catResponse.json();
-        setCategorias(catData || []);
+      const catResponse = await fetch(`${API_URL}/categorias`);
+      const catData = await catResponse.json();
+      setCategorias(catData || []);
 
-        if (catData.length > 0) {
-          setCategoria(catData[0].id);
-        }
-
-        const prodResponse = await fetch(`${API_URL}/produtos`);
-        const prodData = await prodResponse.json();
-
-        const produtosPorCateg = Object.values(prodData).flatMap((cat) =>
-          (cat?.produtos || []).map((item) => ({
-            ...item,
-            categoriaId: item.categoriaId || item.categoria,
-          }))
-        );
-
-        setProdutos(produtosPorCateg);
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-      } finally {
-        setLoading(false);
+      if (catData.length > 0) {
+        setCategoria(catData[0].id);
       }
-    };
 
+      const prodResponse = await fetch(`${API_URL}/produtos`);
+      const prodData = await prodResponse.json();
+
+      const produtosPorCateg = Object.values(prodData).flatMap((cat) =>
+        (cat?.produtos || []).map((item) => ({
+          ...item,
+          categoriaId: item.categoriaId || item.categoria,
+        }))
+      );
+
+      setProdutos(produtosPorCateg);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -58,6 +58,16 @@ export default function CardC() {
 
   return (
     <section className="w-full pb-12">
+
+      {/* 🔄 BOTÃO REFRESH (discreto, não quebra UX) */}
+      <div className="flex justify-end px-4 mt-4">
+        <button
+          onClick={fetchData}
+          className="text-xs text-[#5b9bd5] font-semibold hover:underline"
+        >
+          Atualizar
+        </button>
+      </div>
 
       {/* ── Tabs de categoria  */}
       <div className="flex justify-center px-4 mt-6">
@@ -82,24 +92,36 @@ export default function CardC() {
 
       {/* ── Título */}
       <div className="flex flex-col items-center mt-5 mb-1 px-4 gap-1">
+        <div className="flex items-center gap-3 w-full max-w-xs">
+          <span className="flex-1 h-px bg-gradient-to-r from-transparent via-[#E8719D] to-[#E8719D]" />
+          <span className="text-[#E8719D] text-lg">✦</span>
+          <span className="flex-1 h-px bg-gradient-to-l from-transparent via-[#E8719D] to-[#E8719D]" />
+        </div>
+
         <h2 className="text-3xl md:text-4xl text-[#d94f87] font-[Alex_Brush] leading-tight">
           {categoriaNome}
         </h2>
+
+        <div className="flex items-center gap-3 w-full max-w-xs">
+          <span className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5b9bd5] to-[#5b9bd5]" />
+          <span className="text-[#5b9bd5] text-lg">✦</span>
+          <span className="flex-1 h-px bg-gradient-to-l from-transparent via-[#5b9bd5] to-[#5b9bd5]" />
+        </div>
       </div>
 
       {/* ── Grid */}
       <div className="w-full max-w-[1100px] mx-auto px-4 mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
 
-        {/* LOADING  */}
+        {/* ⏳ LOADING (mesmo estilo dos cards) */}
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
                 className="bg-white rounded-2xl border border-[#f3d3df] p-3 animate-pulse"
               >
-                <div className="h-[120px] bg-gray-200 rounded mb-3" />
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                <div className="h-[120px] bg-[#fce4ef] rounded mb-3" />
+                <div className="h-4 bg-[#f3d3df] rounded w-3/4 mb-2" />
+                <div className="h-3 bg-[#f3d3df] rounded w-1/2" />
               </div>
             ))
 
@@ -129,7 +151,7 @@ export default function CardC() {
                 </div>
 
                 <div className="flex flex-col flex-1 p-3 gap-2">
-                  <h3 className="font-bold text-sm md:text-base">
+                  <h3 className="font-bold text-[#2d3a5a] text-sm md:text-base">
                     {item.nome}
                   </h3>
 
@@ -137,10 +159,12 @@ export default function CardC() {
                     {item.precos.map((p) => (
                       <div
                         key={`${item.id}-${p.label}`}
-                        className="flex justify-between text-xs"
+                        className="flex items-center justify-between"
                       >
-                        <span>{p.label}</span>
-                        <span className="font-bold text-[#c2185b]">
+                        <span className="text-xs text-[#9ca3af]">
+                          {p.label}
+                        </span>
+                        <span className="text-sm text-[#c2185b] font-bold">
                           {formatarValor(p.valor)}
                         </span>
                       </div>

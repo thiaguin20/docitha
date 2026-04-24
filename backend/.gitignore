@@ -5,6 +5,7 @@
 
 #data
 data/
+backend/data/produtos.json
 
 # Node modules
 node_modules/

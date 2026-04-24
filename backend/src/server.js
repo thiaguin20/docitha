@@ -155,7 +155,7 @@ async function uploadParaSupabase(file) {
 }
 
 /**
- * Deleta arquivo do Supabase Storage
+ * Deleta arquivo do Supabase storage
  */
 async function deletarImagemSupabase(url) {
   try {

@@ -48,6 +48,8 @@ export default function CardC() {
   const categoriaNome = categorias.find((c) => c.id === categoria)?.nome || "Cardápio";
   const categoriaProdutos = produtos.filter((p) => p.categoriaId === categoria);
 
+ 
+
   return (
     <section className="w-full pb-12">
 
@@ -192,7 +194,8 @@ export default function CardC() {
 
               {/* Botão */}
               <a
-                href="https://api.whatsapp.com/send?phone=5518997409697"
+                 href={`https://api.whatsapp.com/send?phone=5518997409697&text=${encodeURIComponent(
+                `Gostei de ${item.nome}, gostaria de encomendar!`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="

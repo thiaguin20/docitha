@@ -389,6 +389,32 @@ app.get("/produtos", async (req, res) => {
   res.json(result);
 });
 
+app.get("/cardapio", async (req, res) => {
+  try {
+    const data = await readJson(produtosFile);
+    const categorias = data.categorias || [];
+    const produtos = data.produtos || [];
+
+    const produtosPorCategoria = {};
+    categorias.forEach((c) => {
+      produtosPorCategoria[c.id] = {
+        titulo: c.nome,
+        produtos: produtos.filter((p) => p.categoriaId === c.id),
+      };
+    });
+
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    res.json({ categorias, produtosPorCategoria });
+  } catch (err) {
+    console.error("Erro ao carregar cardapio:", err);
+    res.status(500).json({ message: "Erro ao carregar cardapio" });
+  }
+});
+
+app.get("/healthz", (req, res) => {
+  res.json({ ok: true });
+});
+
 /* criar produto */
 
 app.post("/produtos", autenticar, somenteAdmin, async (req, res) => {

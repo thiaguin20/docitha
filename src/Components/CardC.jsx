@@ -12,24 +12,28 @@ export default function CardC() {
   const [categorias, setCategorias] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [categoria, setCategoria] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
+      setErro("");
+
       try {
-        // Buscar categorias
-        const catResponse = await fetch(`${API_URL}/categorias`);
-        const catData = await catResponse.json();
-        setCategorias(catData || []);
+        const response = await fetch(`${API_URL}/cardapio`);
+        if (!response.ok) throw new Error("Falha ao carregar cardapio");
+
+        const data = await response.json();
+        const catData = data.categorias || [];
+        const produtosPorCategoria = data.produtosPorCategoria || {};
+
+        setCategorias(catData);
         if (catData.length > 0) {
-          setCategoria(catData[0].id);
+          setCategoria((atual) => atual || catData[0].id);
         }
 
-        // Buscar produtos
-        const prodResponse = await fetch(`${API_URL}/produtos`);
-        const prodData = await prodResponse.json();
-        
-        // Reorganizar produtos por categoria
-        const produtosPorCateg = Object.values(prodData).flatMap((cat) =>
+        const produtosPorCateg = Object.values(produtosPorCategoria).flatMap((cat) =>
           (cat?.produtos || []).map((item) => ({
             ...item,
             categoriaId: item.categoriaId || item.categoria,
@@ -38,6 +42,9 @@ export default function CardC() {
         setProdutos(produtosPorCateg);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
+        setErro("Nao foi possivel carregar o cardapio agora. Tente novamente em instantes.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -49,6 +56,36 @@ export default function CardC() {
   const categoriaProdutos = produtos.filter((p) => p.categoriaId === categoria);
 
  
+  if (isLoading) {
+    return (
+      <section className="w-full pb-12">
+        <div className="mx-auto mt-8 max-w-md rounded-2xl border border-[#f3d3df] bg-white px-4 py-5 text-center text-sm font-semibold text-[#b05480] shadow-[0_4px_18px_rgba(232,113,157,0.13)]">
+          Carregando cardapio...
+        </div>
+      </section>
+    );
+  }
+
+  if (erro) {
+    return (
+      <section className="w-full pb-12">
+        <div className="mx-auto mt-8 max-w-md rounded-2xl border border-red-200 bg-red-50 px-4 py-5 text-center text-sm font-semibold text-red-700">
+          {erro}
+        </div>
+      </section>
+    );
+  }
+
+  if (categorias.length === 0) {
+    return (
+      <section className="w-full pb-12">
+        <div className="mx-auto mt-8 max-w-md rounded-2xl border border-[#f3d3df] bg-white px-4 py-5 text-center text-sm font-semibold text-[#b05480] shadow-[0_4px_18px_rgba(232,113,157,0.13)]">
+          Cardapio indisponivel no momento.
+        </div>
+      </section>
+    );
+  }
+
 
   return (
     <section className="w-full pb-12">
@@ -163,7 +200,7 @@ export default function CardC() {
 
               {/* Preços */}
               <div className="flex flex-col gap-1">
-                {item.precos.map((p) => (
+                {(item.precos || []).map((p) => (
                   <div
                     key={`${item.id}-${p.label}`}
                     className="flex items-center justify-between"
